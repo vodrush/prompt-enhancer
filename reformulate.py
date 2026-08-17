@@ -236,6 +236,8 @@ DEFAULT_SKIP_PREFIXES = (
     "You are a summarization agent",
     "You are updating a context compaction summary",
     "Create a structured checkpoint summary",
+    "Current runtime context.",
+    "You are now acting as a compaction engine",
 )
 
 

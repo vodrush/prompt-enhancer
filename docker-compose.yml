@@ -30,26 +30,7 @@ services:
       WATCHER_TIMEOUT: "120"
       WATCHER_SHOW_REWRITE: "1"
       WATCHER_CACHE_TTL: "600"
-      WATCHER_SKIP_PREFIXES: "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary"
-    restart: unless-stopped
-
-  # DeepSeek Harness (dsh) - Web UI containerized; boots with the stack.
-  # DSH_HOME monte ./dsh-home (config + sessions du container, gitignore) et
-  # le workspace football-predictor est monte dans /workspaces/football-predictor
-  # pour que les sessions patchees (cwd Linux) pointent vers un chemin valide.
-  dsh:
-    build:
-      context: .
-      dockerfile: docker/dsh/Dockerfile
-    container_name: prompt-enhancer-dsh
-    ports:
-      - "127.0.0.1:3080:3080"
-    volumes:
-      - ./dsh-home:/dsh-home
-      - C:\Users\rapha\Desktop\apppredpython\football-predictor:/workspaces/football-predictor
-    environment:
-      DSH_HOME: /dsh-home
-      DSH_AGENTS_HOME: /dsh-home/agents
+      WATCHER_SKIP_PREFIXES: "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary,Current runtime context.,You are now acting as a compaction engine"
     restart: unless-stopped
 
   # SearXNG â€” metasearch engine self-heberge (recherche web gratuite sans cle)

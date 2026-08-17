@@ -47,7 +47,7 @@ DEFAULTS = {
     "cache_ttl": "600",
     "max_chars": "5000",
     "max_lines": "60",
-    "skip_prefixes": "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary",
+    "skip_prefixes": "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary,Current runtime context.,You are now acting as a compaction engine",
 }
 
 ENV_MAP = {
