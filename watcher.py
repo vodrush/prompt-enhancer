@@ -1,4 +1,4 @@
-"""Hermes prompt watcher.
+﻿"""Hermes prompt watcher.
 
 OpenAI-compatible reverse proxy that sits between Hermes and the model gateway
 (OmniRoute on localhost:20128 by default). Every /v1/chat/completions request is
@@ -47,7 +47,7 @@ DEFAULTS = {
     "cache_ttl": "600",
     "max_chars": "5000",
     "max_lines": "60",
-    "skip_prefixes": "[System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary",
+    "skip_prefixes": "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary",
 }
 
 ENV_MAP = {

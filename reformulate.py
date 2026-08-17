@@ -1,4 +1,4 @@
-"""Reformulation engine for the Hermes prompt watcher.
+﻿"""Reformulation engine for the Hermes prompt watcher.
 
 Detects when a message should be rewritten, protects JSON/code blocks so they
 travel through the reformulation model untouched, and calls the upstream
@@ -227,6 +227,10 @@ def word_count(text: str) -> int:
 
 
 DEFAULT_SKIP_PREFIXES = (
+    "<system-reminder>",
+    "<system>",
+    "<available_skills>",
+    "<skill_content>",
     "[System",
     "[IMPORTANT",
     "You are a summarization agent",

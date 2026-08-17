@@ -30,7 +30,7 @@ services:
       WATCHER_TIMEOUT: "120"
       WATCHER_SHOW_REWRITE: "1"
       WATCHER_CACHE_TTL: "600"
-      WATCHER_SKIP_PREFIXES: "[System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary"
+      WATCHER_SKIP_PREFIXES: "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary"
     restart: unless-stopped
 
   # DeepSeek Harness (dsh) - Web UI containerized; boots with the stack.
