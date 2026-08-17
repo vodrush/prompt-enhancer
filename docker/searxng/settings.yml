@@ -1,0 +1,20 @@
+use_default_settings: true
+
+server:
+  secret_key: "hermes-watcher-searxng-local-secret-7f3a9c2e"
+  limiter: false
+  image_proxy: true
+  port: 8080
+  bind_address: "0.0.0.0"
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "fr"
+  formats:
+    - html
+    - json
+
+engines:
+  - name: wikidata
+    disabled: true

@@ -1,0 +1,64 @@
+# Hermes watcher stack
+#
+# OPTION PAR DEFAUT (zero risque) : OmniRoute reste NATIF sur Windows
+# (installation existante, config + combos + cles intactes sur le port 20128)
+# et le watcher tourne en Docker en pointant dessus via host.docker.internal.
+#
+# ATTENTION (option alternative) : mettre OmniRoute dans Docker necessite une
+# base NEUVE — la migration silencieuse du conteneur RESET les bases issues
+# d'installations Windows plus anciennes (verifie : combos vides apres boot).
+# Pour tenter l'option conteneurisee : decommenter le service omniroute,
+# reconfigurer providers/combos dans le dashboard, et remettre l'upstream du
+# watcher sur http://omniroute:20128.
+#
+# Hermes parle toujours a localhost:20128 (OmniRoute) et localhost:20500 (watcher).
+services:
+  watcher:
+    build:
+      context: .
+      dockerfile: docker/watcher/Dockerfile
+    container_name: hermes-watcher
+    ports:
+      - "127.0.0.1:20500:20500"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      WATCHER_UPSTREAM: http://host.docker.internal:20128
+      WATCHER_COMBO_MODEL: reprompter
+      WATCHER_MIN_WORDS: "4"
+      WATCHER_TIMEOUT: "120"
+      WATCHER_SHOW_REWRITE: "1"
+      WATCHER_CACHE_TTL: "600"
+      WATCHER_SKIP_PREFIXES: "[System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary"
+    restart: unless-stopped
+
+  # SearXNG — metasearch engine self-heberge (recherche web gratuite sans cle)
+  # Hermes y accede via SEARXNG_URL=http://localhost:8888 (web.search_backend: searxng)
+  searxng:
+    image: searxng/searxng
+    container_name: searxng
+    ports:
+      - "127.0.0.1:8888:8080"
+    volumes:
+      - ./docker/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8888
+    restart: unless-stopped
+
+  # omniroute (option alternative — voir en-tete du fichier) :
+  #   build:
+  #     context: .
+  #     dockerfile: docker/omniroute/Dockerfile
+  #   container_name: omniroute
+  #   ports:
+  #     - "127.0.0.1:20128:20128"
+  #   environment:
+  #     DATA_DIR: /data
+  #   env_file:
+  #     - ./omniroute.env
+  #   volumes:
+  #     - omniroute-data:/data
+  #   restart: unless-stopped
+
+# volumes:
+#   omniroute-data:

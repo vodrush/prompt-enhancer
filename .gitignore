@@ -1,0 +1,20 @@
+# Secrets — jamais versionnés
+omniroute.env
+watcher.env
+*.local.env
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Logs
+*.log
+logs/
+
+# Docker runtime
+*.pid
