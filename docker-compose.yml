@@ -33,8 +33,11 @@ services:
       WATCHER_SKIP_PREFIXES: "[System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary"
     restart: unless-stopped
 
-  # DeepSeek Harness (dsh) â€” Web UI containerized; boots with the stack.
-  # Config home: ./dsh-home (settings.yaml + credentials, gitignored).
+  # DeepSeek Harness (dsh) - Web UI containerized; boots with the stack.
+  # DSH_HOME monte le vrai ~/.dsh (sessions natives partagees), avec un
+  # override settings.yaml qui pointe vers le service watcher (reseau
+  # compose). socat dans le container bridge 3080 -> 127.0.0.1:3081 car dsh
+  # refuse --host 0.0.0.0 (RCE guard).
   dsh:
     build:
       context: .
@@ -43,12 +46,11 @@ services:
     ports:
       - "127.0.0.1:3080:3080"
     volumes:
-      - ./dsh-home:/dsh-home
-      - ./dsh-workspaces:/workspaces
+      - C:\Users\rapha\.dsh:/dsh-home
+      - ./dsh-home/settings.yaml:/dsh-home/settings.yaml:ro
     environment:
       DSH_HOME: /dsh-home
       DSH_AGENTS_HOME: /dsh-home/agents
-    working_dir: /workspaces
     restart: unless-stopped
 
   # SearXNG â€” metasearch engine self-heberge (recherche web gratuite sans cle)
