@@ -1,7 +1,7 @@
 ﻿# Hermes prompt enhancer stack
 #
-# OmniRoute reste NATIF sur Windows (son runtime SEA ne tourne pas fiablement
-# en container Linux ici). Le watcher y accede via host.docker.internal.
+# OmniRoute reste NATIF sur Windows (le container RESET la base SQLite au
+# boot : combos/providers perdus). Le watcher y accede via host.docker.internal.
 #
 # Hermes/dsh natifs continuent sur localhost:20128.
 services:
