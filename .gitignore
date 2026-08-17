@@ -5,6 +5,10 @@ watcher.env
 .env
 .env.*
 
+# dsh container home — contient credentials + sessions
+dsh-home/
+dsh-workspaces/
+
 # Python
 __pycache__/
 *.pyc

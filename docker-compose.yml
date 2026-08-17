@@ -32,6 +32,24 @@ services:
       WATCHER_SKIP_PREFIXES: "[System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary"
     restart: unless-stopped
 
+  # DeepSeek Harness (dsh) — Web UI containerized; boots with the stack.
+  # Config home: ./dsh-home (settings.yaml + credentials, gitignored).
+  dsh:
+    build:
+      context: .
+      dockerfile: docker/dsh/Dockerfile
+    container_name: dsh-web
+    ports:
+      - "127.0.0.1:3080:3080"
+    volumes:
+      - ./dsh-home:/dsh-home
+      - ./dsh-workspaces:/workspaces
+    environment:
+      DSH_HOME: /dsh-home
+      DSH_AGENTS_HOME: /dsh-home/agents
+    working_dir: /workspaces
+    restart: unless-stopped
+
   # SearXNG — metasearch engine self-heberge (recherche web gratuite sans cle)
   # Hermes y accede via SEARXNG_URL=http://localhost:8888 (web.search_backend: searxng)
   searxng:
