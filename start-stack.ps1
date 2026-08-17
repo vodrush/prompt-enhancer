@@ -1,9 +1,9 @@
-# Auto-start du stack complet au logon :
-#   1. OmniRoute natif Windows (daemon, port 20128) — si pas deja en cours
-#   2. Watcher (Docker, port 20500) — attend le moteur Docker, puis compose up
+﻿# Auto-start du stack complet au logon :
+#   1. OmniRoute natif Windows (daemon, port 20128) â€” si pas deja en cours
+#   2. Enhancer (Docker, port 20500) â€” attend le moteur Docker, puis compose up
 # Idempotent : sans effet si tout tourne deja.
 $ErrorActionPreference = "Stop"
-Set-Location "C:\Users\rapha\hermes-watcher"
+Set-Location "C:\Users\rapha\prompt-enhancer"
 
 # --- 1. OmniRoute natif -----------------------------------------------------
 $omnirouteCmd = "C:\Users\rapha\AppData\Roaming\npm\omniroute.cmd"
@@ -32,4 +32,4 @@ docker compose up -d --build
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 docker compose ps
 
-Write-Output "[stack] OmniRoute : http://localhost:20128 | Watcher : http://localhost:20500"
+Write-Output "[stack] OmniRoute : http://localhost:20128 | Enhancer : http://localhost:20500"

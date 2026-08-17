@@ -1,23 +1,24 @@
-# Hermes watcher stack
+﻿# Hermes prompt enhancer stack
 #
 # OPTION PAR DEFAUT (zero risque) : OmniRoute reste NATIF sur Windows
 # (installation existante, config + combos + cles intactes sur le port 20128)
 # et le watcher tourne en Docker en pointant dessus via host.docker.internal.
 #
 # ATTENTION (option alternative) : mettre OmniRoute dans Docker necessite une
-# base NEUVE — la migration silencieuse du conteneur RESET les bases issues
+# base NEUVE â€” la migration silencieuse du conteneur RESET les bases issues
 # d'installations Windows plus anciennes (verifie : combos vides apres boot).
 # Pour tenter l'option conteneurisee : decommenter le service omniroute,
 # reconfigurer providers/combos dans le dashboard, et remettre l'upstream du
 # watcher sur http://omniroute:20128.
 #
-# Hermes parle toujours a localhost:20128 (OmniRoute) et localhost:20500 (watcher).
+# Hermes parle toujours a localhost:20128 (OmniRoute), localhost:20500 (enhancer)
+# et localhost:3080 (dsh web).
 services:
   watcher:
     build:
       context: .
       dockerfile: docker/watcher/Dockerfile
-    container_name: hermes-watcher
+    container_name: prompt-enhancer
     ports:
       - "127.0.0.1:20500:20500"
     extra_hosts:
@@ -32,13 +33,13 @@ services:
       WATCHER_SKIP_PREFIXES: "[System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary"
     restart: unless-stopped
 
-  # DeepSeek Harness (dsh) — Web UI containerized; boots with the stack.
+  # DeepSeek Harness (dsh) â€” Web UI containerized; boots with the stack.
   # Config home: ./dsh-home (settings.yaml + credentials, gitignored).
   dsh:
     build:
       context: .
       dockerfile: docker/dsh/Dockerfile
-    container_name: dsh-web
+    container_name: prompt-enhancer-dsh
     ports:
       - "127.0.0.1:3080:3080"
     volumes:
@@ -50,7 +51,7 @@ services:
     working_dir: /workspaces
     restart: unless-stopped
 
-  # SearXNG — metasearch engine self-heberge (recherche web gratuite sans cle)
+  # SearXNG â€” metasearch engine self-heberge (recherche web gratuite sans cle)
   # Hermes y accede via SEARXNG_URL=http://localhost:8888 (web.search_backend: searxng)
   searxng:
     image: searxng/searxng
@@ -63,7 +64,7 @@ services:
       - SEARXNG_BASE_URL=http://localhost:8888
     restart: unless-stopped
 
-  # omniroute (option alternative — voir en-tete du fichier) :
+  # omniroute (option alternative â€” voir en-tete du fichier) :
   #   build:
   #     context: .
   #     dockerfile: docker/omniroute/Dockerfile
