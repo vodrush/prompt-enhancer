@@ -34,10 +34,9 @@ services:
     restart: unless-stopped
 
   # DeepSeek Harness (dsh) - Web UI containerized; boots with the stack.
-  # DSH_HOME monte le vrai ~/.dsh (sessions natives partagees), avec un
-  # override settings.yaml qui pointe vers le service watcher (reseau
-  # compose). socat dans le container bridge 3080 -> 127.0.0.1:3081 car dsh
-  # refuse --host 0.0.0.0 (RCE guard).
+  # DSH_HOME monte ./dsh-home (config + sessions du container, gitignore) et
+  # le workspace football-predictor est monte dans /workspaces/football-predictor
+  # pour que les sessions patchees (cwd Linux) pointent vers un chemin valide.
   dsh:
     build:
       context: .
@@ -46,8 +45,8 @@ services:
     ports:
       - "127.0.0.1:3080:3080"
     volumes:
-      - C:\Users\rapha\.dsh:/dsh-home
-      - ./dsh-home/settings.yaml:/dsh-home/settings.yaml:ro
+      - ./dsh-home:/dsh-home
+      - C:\Users\rapha\Desktop\apppredpython\football-predictor:/workspaces/football-predictor
     environment:
       DSH_HOME: /dsh-home
       DSH_AGENTS_HOME: /dsh-home/agents
