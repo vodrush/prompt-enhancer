@@ -45,7 +45,7 @@ DEFAULTS = {
     "timeout": 30,
     "show_rewrite": "1",
     "cache_ttl": "600",
-    "skip_prefixes": "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary,Current runtime context.,You are now acting as a compaction engine",
+    "skip_prefixes": "<system-reminder>,<system>,<available_skills>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary,Current runtime context.,You are now acting as a compaction engine",
 }
 
 ENV_MAP = {

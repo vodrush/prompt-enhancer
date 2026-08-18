@@ -21,7 +21,7 @@ services:
       WATCHER_TIMEOUT: "120"
       WATCHER_SHOW_REWRITE: "1"
       WATCHER_CACHE_TTL: "600"
-      WATCHER_SKIP_PREFIXES: "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary,Current runtime context.,You are now acting as a compaction engine"
+      WATCHER_SKIP_PREFIXES: "<system-reminder>,<system>,<available_skills>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary,Current runtime context.,You are now acting as a compaction engine"
     restart: unless-stopped
 
   # SearXNG - metasearch engine self-heberge (recherche web gratuite sans cle)

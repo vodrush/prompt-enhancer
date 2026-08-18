@@ -13,6 +13,7 @@ import re
 log = logging.getLogger("watcher.reformulate")
 
 TRIPLE_BRACKET_RE = re.compile(r"\[\[\[.*?\]\]\]", re.DOTALL)
+SKILL_BLOCK_RE = re.compile(r"<skill_content.*?</skill_content>|<skill_resources.*?</skill_resources>|<skill_assets.*?</skill_assets>", re.DOTALL)
 PLACEHOLDER = "{{BLOCK_%d}}"
 PLACEHOLDER_RE = re.compile(r"\{\{BLOCK_(\d+)\}\}")
 SYSTEM_MARKER_RE = re.compile(r"^\[System:[^\]]*\]\s*", re.IGNORECASE)
@@ -103,17 +104,14 @@ SYSTEM_PROMPT = (
 
 
 def extract_blocks(text: str) -> tuple[str, list[str]]:
-    """Replace protected segments with {{BLOCK_n}} placeholders, in order:
+    """Replace protected segments with {{BLOCK_n}} placeholders.
 
-    1. Fenced code blocks (``` ... ```).
-    2. Triple-bracket segments ([[[ ... ]]]) — the user's explicit "keep this
-       verbatim" syntax: everything inside [[[ ]]] is sent back exactly as-is,
-       only the prose outside is reformulated.
-    3. Runs of technical lines (stack traces, logs, source references) so
-       pasted diagnostics travel through reformulation untouched.
+    1. <skill_content>/<skill_resources> blocks (skills charges par
+       l'utilisateur) — jamais reformules.
+    2. Triple-bracket segments ([[[ ... ]]]) — syntaxe explicite
+       "garder tel quel".
 
-    A technical run needs at least 2 consecutive technical lines; surrounding
-    prose is left for the model.
+    La prose autour est reformulee.
     """
     blocks: list[str] = []
 
@@ -121,6 +119,7 @@ def extract_blocks(text: str) -> tuple[str, list[str]]:
         blocks.append(m.group(0))
         return PLACEHOLDER % (len(blocks) - 1)
 
+    text = SKILL_BLOCK_RE.sub(repl, text)
     text = TRIPLE_BRACKET_RE.sub(repl, text)
     return text, blocks
 
@@ -154,7 +153,6 @@ DEFAULT_SKIP_PREFIXES = (
     "<system-reminder>",
     "<system>",
     "<available_skills>",
-    "<skill_content>",
     "[System",
     "[IMPORTANT",
     "You are a summarization agent",
@@ -186,8 +184,9 @@ def decide(
         return "passthrough"
     if is_pure_json(message):
         return "passthrough"
-    if TRIPLE_BRACKET_RE.search(message):
-        # Blocs [[[ ]]] proteges, prose autour reformulee.
+    if TRIPLE_BRACKET_RE.search(message) or SKILL_BLOCK_RE.search(message):
+        # Blocs [[[ ]]] et <skill_content>/<skill_resources> proteges,
+        # prose autour reformulee.
         protected, _ = extract_blocks(message)
         prose = PLACEHOLDER_RE.sub("", protected)
         if word_count(prose) >= min_words:
