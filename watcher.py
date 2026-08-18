@@ -229,12 +229,12 @@ class WatcherApp:
                 reason = "trop court"
             else:
                 reason = "vide"
-            log.info("[model=%s] passthrough (%s): %.80r", orig_model, reason, original)
+            log.info("[model=%s] passthrough (%s): %r", orig_model, reason, original)
             return await self.relay(request, data=raw)
 
         if not self.cfg["combo_model"]:
             self.counters.skipped += 1
-            log.info("[model=%s] passthrough (combo_model non configure): %.80r", orig_model, original)
+            log.info("[model=%s] passthrough (combo_model non configure): %r", orig_model, original)
             return await self.relay(request, data=raw)
 
         started = time.monotonic()
@@ -242,7 +242,7 @@ class WatcherApp:
         if cached is not None:
             self.cache_hits += 1
             result = cached
-            log.info("[model=%s] %s (cache): %.80r -> %.80r", orig_model, decision, original, result)
+            log.info("[model=%s] %s (cache): %r -> %r", orig_model, decision, original, result)
         else:
             body_result = await self._reformulate(body_text, orig_model)
             if body_result is not None:
@@ -253,14 +253,14 @@ class WatcherApp:
 
         if result is None:
             self.counters.failed += 1
-            log.info("[model=%s] reformulation echec -> envoi original: %.80r", orig_model, original)
+            log.info("[model=%s] reformulation echec -> envoi original: %r", orig_model, original)
             return await self.relay(request, data=raw)
 
         last["content"] = result
         self.counters.reformulated += 1
         elapsed = time.monotonic() - started
         log.info(
-            "[model=%s] %s: %.80r -> %.80r (%.1fs)",
+            "[model=%s] %s: %r -> %r (%.1fs)",
             orig_model, decision, original, result, elapsed,
         )
 
