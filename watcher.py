@@ -200,9 +200,16 @@ class WatcherApp:
 
         orig_model = body.get("model", "")
         msgs = body["messages"]
+        # Prend le dernier message user qui n'est PAS un bloc skill pur
+        # (<skill_content> seul). Les skills injectes par dsh sont des messages
+        # separe; la vraie phrase utilisateur est ailleurs. Remonte donc au
+        # message user precedent contenant de la prose a reformuler.
         last = None
         for msg in reversed(msgs):
             if msg.get("role") == "user" and isinstance(msg.get("content"), str):
+                content = msg["content"]
+                if reformulate.is_pure_skill_block(content):
+                    continue
                 last = msg
                 break
 

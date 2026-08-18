@@ -143,6 +143,23 @@ def extract_blocks(text: str) -> tuple[str, list[str]]:
     return text, blocks
 
 
+def is_pure_skill_block(text: str) -> bool:
+    """True si le message est compose UNIQUEMENT de blocs skill/XML
+    (<skill_content>, <skill_resources>, <system-reminder>, etc.) sans
+    prose utilisateur autour. Utilise pour ignorer les messages de skills
+    injectes par dsh et remonter au vrai message a reformuler."""
+    stripped = text.strip()
+    if not stripped:
+        return True
+    # retire tous les blocs XML connus
+    remaining = SKILL_BLOCK_RE.sub("", stripped)
+    remaining = remaining.replace("<system-reminder>", "").replace("</system-reminder>", "")
+    remaining = remaining.replace("<available_skills>", "").replace("</available_skills>", "")
+    remaining = remaining.replace("<system>", "").replace("</system>", "")
+    # reste-t-il de la prose ?
+    return not remaining.strip()
+
+
 def restore_blocks(text: str, blocks: list[str]) -> str:
     """Restore {{BLOCK_n}} placeholders with the original block content."""
 
