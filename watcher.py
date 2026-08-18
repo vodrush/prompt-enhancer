@@ -45,8 +45,6 @@ DEFAULTS = {
     "timeout": 30,
     "show_rewrite": "1",
     "cache_ttl": "600",
-    "max_chars": "5000",
-    "max_lines": "60",
     "skip_prefixes": "<system-reminder>,<system>,<available_skills>,<skill_content>,<System,[IMPORTANT,You are a summarization agent,You are updating a context compaction summary,Create a structured checkpoint summary,Current runtime context.,You are now acting as a compaction engine",
 }
 
@@ -59,8 +57,6 @@ ENV_MAP = {
     "WATCHER_TIMEOUT": "timeout",
     "WATCHER_SHOW_REWRITE": "show_rewrite",
     "WATCHER_CACHE_TTL": "cache_ttl",
-    "WATCHER_MAX_CHARS": "max_chars",
-    "WATCHER_MAX_LINES": "max_lines",
     "WATCHER_SKIP_PREFIXES": "skip_prefixes",
 }
 
@@ -116,8 +112,6 @@ def build_config(argv: list[str] | None = None) -> dict:
     cfg["min_words"] = int(cfg["min_words"])
     cfg["timeout"] = float(cfg["timeout"])
     cfg["cache_ttl"] = float(cfg.get("cache_ttl", "600"))
-    cfg["max_chars"] = int(cfg.get("max_chars", "5000"))
-    cfg["max_lines"] = int(cfg.get("max_lines", "60"))
     cfg["show_rewrite"] = str(cfg.get("show_rewrite", "1")).lower() in ("1", "true", "yes", "on")
     cfg["skip_prefixes"] = tuple(
         p.strip() for p in str(cfg.get(
@@ -222,8 +216,6 @@ class WatcherApp:
             body_text,
             self.cfg["min_words"],
             self.cfg["skip_prefixes"],
-            self.cfg["max_chars"],
-            self.cfg["max_lines"],
         )
 
         if decision == "passthrough":
@@ -233,8 +225,6 @@ class WatcherApp:
                 reason = "message interne"
             elif reformulate.is_pure_json(body_text):
                 reason = "message JSON pur"
-            elif reformulate.is_large_block(body_text, self.cfg["max_chars"], self.cfg["max_lines"]):
-                reason = "bloc copie-colle"
             elif reformulate.word_count(body_text) < self.cfg["min_words"]:
                 reason = "trop court"
             else:
@@ -312,7 +302,6 @@ class WatcherApp:
 
         if reformulate.decide(
             message, self.cfg["min_words"], self.cfg["skip_prefixes"],
-            self.cfg["max_chars"], self.cfg["max_lines"],
         ) == "protect":
             self.counters.protected += 1
             text, blocks = reformulate.extract_blocks(message)

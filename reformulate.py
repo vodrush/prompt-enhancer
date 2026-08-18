@@ -12,17 +12,10 @@ import re
 
 log = logging.getLogger("watcher.reformulate")
 
-FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 TRIPLE_BRACKET_RE = re.compile(r"\[\[\[.*?\]\]\]", re.DOTALL)
 PLACEHOLDER = "{{BLOCK_%d}}"
 PLACEHOLDER_RE = re.compile(r"\{\{BLOCK_(\d+)\}\}")
 SYSTEM_MARKER_RE = re.compile(r"^\[System:[^\]]*\]\s*", re.IGNORECASE)
-TECH_LINE_RE = re.compile(
-    r"(?:@\s|://|\.\w{1,6}:\d+|\(anonymous\)|https?://"
-    r"|\d{2}:\d{2}:\d{2}|req=|sess=|\[(?:API|MATCHES|AGENT|SOFASCORE|OPENCODE_GO|OMNIROUTE|ORCHESTRATOR|GoalsModelV2|APIFY|UEFA)[^\]]*\]"
-    r"|\"GET |\"POST |\"OPTIONS |\"PUT |\"DELETE |\bnet::ERR_|\bUncaught \w+:|\bat \w+ \(.*\.\w+:\d+\)"
-    r"|\bat \w+(?:\.\w+)* \(\w+:\d+:\d+\)|\bat \w+ [A-Za-z]+://)"
-)
 
 
 def strip_system_marker(message: str) -> tuple[str, str]:
@@ -128,59 +121,18 @@ def extract_blocks(text: str) -> tuple[str, list[str]]:
         blocks.append(m.group(0))
         return PLACEHOLDER % (len(blocks) - 1)
 
-    text = FENCE_RE.sub(repl, text)
     text = TRIPLE_BRACKET_RE.sub(repl, text)
-
-    lines = text.splitlines()
-    out: list[str] = []
-    i = 0
-    n = len(lines)
-    while i < n:
-        if TECH_LINE_RE.search(lines[i]):
-            j = i + 1
-            while j < n and (TECH_LINE_RE.search(lines[j]) or _is_short_tail(lines, j)):
-                j += 1
-            if j - i >= 2:
-                blocks.append("\n".join(lines[i:j]))
-                out.append(PLACEHOLDER % (len(blocks) - 1))
-                i = j
-                continue
-        out.append(lines[i])
-        i += 1
-
-    return "\n".join(out), blocks
-
-
-def _is_short_tail(lines: list[str], idx: int) -> bool:
-    """Absorb short non-technical lines (e.g. 'postMessage', 'setTimeout')
-    into a technical run so stack traces stay contiguous."""
-    line = lines[idx].strip()
-    if not line or len(line) > 40:
-        return False
-    if TECH_LINE_RE.search(lines[idx]):
-        return True
-    nxt = lines[idx + 1] if idx + 1 < len(lines) else ""
-    return bool(TECH_LINE_RE.search(nxt))
+    return text, blocks
 
 
 def restore_blocks(text: str, blocks: list[str]) -> str:
-    """Restore {{BLOCK_n}} placeholders with the original block content.
-
-    Iterates until stable because a block can itself contain a placeholder
-    (e.g. a [..] marker embedded inside a protected technical run).
-    """
+    """Restore {{BLOCK_n}} placeholders with the original block content."""
 
     def repl(m: re.Match) -> str:
         i = int(m.group(1))
         return blocks[i] if 0 <= i < len(blocks) else m.group(0)
 
-    result = text
-    for _ in range(len(blocks) + 2):
-        new = PLACEHOLDER_RE.sub(repl, result)
-        if new == result:
-            break
-        result = new
-    return result
+    return PLACEHOLDER_RE.sub(repl, text)
 
 
 def is_pure_json(text: str) -> bool:
@@ -192,34 +144,6 @@ def is_pure_json(text: str) -> bool:
         return True
     except (ValueError, TypeError):
         return False
-
-
-def is_large_block(text: str, max_chars: int = 5000, max_lines: int = 60) -> bool:
-    """True when the message looks like a copied/pasted block (log, dump,
-    config, code without fences) that must travel intact — never reformulated.
-
-    Heuristic: total length above max_chars, or many lines, or at least one
-    very long line (e.g. a minified/JSON blob or a stack trace line).
-    """
-    if len(text) > max_chars:
-        return True
-    lines = text.splitlines()
-    if len(lines) > max_lines:
-        return True
-    return any(len(line) > 500 for line in lines)
-
-
-def has_tech_run(text: str, min_run: int = 2) -> bool:
-    """True when at least `min_run` consecutive lines look technical."""
-    run = 0
-    for line in text.splitlines():
-        if TECH_LINE_RE.search(line):
-            run += 1
-            if run >= min_run:
-                return True
-        else:
-            run = 0
-    return False
 
 
 def word_count(text: str) -> int:
@@ -245,10 +169,14 @@ def decide(
     message: str,
     min_words: int,
     skip_prefixes=DEFAULT_SKIP_PREFIXES,
-    max_chars: int = 5000,
-    max_lines: int = 60,
 ) -> str:
-    """Return 'passthrough' | 'protect' | 'reformulate'."""
+    """Return 'passthrough' | 'protect' | 'reformulate'.
+
+    Uniquement les blocs marques [[[ ... ]]] sont proteges (passthrough
+    du bloc, reformulation de la prose autour). Aucune detection
+    automatique de blocs/gros colles : si pas de [[[ ]]], tout est
+    reformule (sauf JSON pur / messages systeme).
+    """
     if not message or not message.strip():
         return "passthrough"
     stripped = message.lstrip()
@@ -258,21 +186,13 @@ def decide(
         return "passthrough"
     if is_pure_json(message):
         return "passthrough"
-    if FENCE_RE.search(message) or TRIPLE_BRACKET_RE.search(message) or has_tech_run(message):
-        # Pasted blocks detected (fenced, [[[ ]]] user markers, or stack-trace/
-        # log runs): protect the blocks as placeholders and reformulate only the
-        # surrounding prose. This applies even for big messages — a log with
-        # [API] prefixes is content, not protection syntax, but its lines are
-        # technical runs and get protected as whole blocks.
+    if TRIPLE_BRACKET_RE.search(message):
+        # Blocs [[[ ]]] proteges, prose autour reformulee.
         protected, _ = extract_blocks(message)
         prose = PLACEHOLDER_RE.sub("", protected)
         if word_count(prose) >= min_words:
             return "protect"
-        # The message is almost entirely one pasted block with no prose to
-        # reformulate around it -> send it intact.
-        return "passthrough"
-    if is_large_block(message, max_chars, max_lines):
-        # Big blob of pure prose with no identifiable blocks: keep intact.
+        # Message presque entierement constitue d'un bloc -> intact.
         return "passthrough"
     return "reformulate"
 
